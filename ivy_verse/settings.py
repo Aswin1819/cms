@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'authentication',
     'adminapp',
+    'blogs',
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
@@ -59,6 +60,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.JWTAuthMiddleware', 
 ]
 
 ROOT_URLCONF = 'ivy_verse.urls'
