@@ -36,7 +36,7 @@ def login_view(request):
                 refresh = RefreshToken.for_user(user)
                 access_token = str(refresh.access_token)
                 
-                response = redirect('admin_home' if user.is_superuser else 'user_home')
+                response = redirect('admin_posts' if user.is_superuser else 'user_home')
                 response = set_jwt_cookies(response,access_token, str(refresh) )
                 logger.info('user login successfully')
                 return response

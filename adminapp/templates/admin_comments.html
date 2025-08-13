@@ -1,0 +1,72 @@
+{% extends 'admin_base.html' %}
+{% block title %}Comments Management{% endblock %}
+{% block page_header %}
+<i class="bi bi-chat-dots me-2"></i> Comments Management
+{% endblock %}
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active" aria-current="page">Comments</li>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Review and moderate user comments</h4>
+        <span class="text-muted">
+            Total: <span class="badge bg-primary">{{ total_comments }}</span>
+            Approved: <span class="badge bg-info">{{ approved_comments }}</span>
+            Pending: <span class="badge bg-danger">{{ pending_comments }}</span>
+        </span>
+    </div>
+    <form class="d-flex" method="get">
+        <input type="text" name="search" class="form-control me-2" placeholder="Search by author or content">
+        <select name="status" class="form-select me-2">
+            <option value="">All Status</option>
+            <option value="approved">Approved</option>
+            <option value="pending">Pending</option>
+            <option value="rejected">Rejected</option>
+        </select>
+        <button class="btn btn-outline-secondary">Filter</button>
+    </form>
+</div>
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Post</th>
+                <th>Author</th>
+                <th>Comment</th>
+                <th>Status</th>
+                <th>Timestamp</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for comment in comments %}
+            <tr>
+                <td>{{ comment.post.title|truncatechars:30 }}</td>
+                <td>{{ comment.user.username }}</td>
+                <td>{{ comment.content|truncatechars:40 }}</td>
+                <td>
+                    {% if comment.is_approved %}
+                        <span class="badge bg-primary">Approved</span>
+                    {% elif comment.status == 'pending' %}
+                        <span class="badge bg-warning text-dark">Pending</span>
+                    {% else %}
+                        <span class="badge bg-danger">Rejected</span>
+                    {% endif %}
+                </td>
+                <td>{{ comment.created_at|timesince }} ago</td>
+                <td>
+                    <a href="{% url 'admin_approve_comment' comment.id %}" class="btn btn-outline-success btn-sm rounded-3">Approve</a>
+                    <a href="{% url 'admin_reject_comment' comment.id %}" class="btn btn-outline-warning btn-sm rounded-3">Reject</a>
+                    <a href="{% url 'admin_delete_comment' comment.id %}" class="btn btn-outline-danger btn-sm rounded-3">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center text-muted">No comments found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends 'admin_base.html' %}
+{% block title %}Users Management{% endblock %}
+{% block page_header %}
+<i class="bi bi-people me-2"></i> Users Management
+{% endblock %}
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active" aria-current="page">Users</li>
+{% endblock %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-body text-center">
+                <h6 class="fw-bold">Total Users</h6>
+                <span class="display-6 fw-bold">{{ total_users }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-body text-center">
+                <h6 class="fw-bold">Active Users</h6>
+                <span class="display-6 fw-bold text-success">{{ active_users }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-body text-center">
+                <h6 class="fw-bold">Admin Users</h6>
+                <span class="display-6 fw-bold text-primary">{{ admin_users }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-body text-center">
+                <h6 class="fw-bold">Recent Signups</h6>
+                <span class="display-6 fw-bold">{{ recent_signups }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Join Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>
+                    {% if user.is_staff %}
+                        <span class="badge bg-primary">Admin</span>
+                    {% else %}
+                        <span class="badge bg-secondary">User</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if user.is_active %}
+                        <span class="badge bg-success">Active</span>
+                    {% else %}
+                        <span class="badge bg-danger">Inactive</span>
+                    {% endif %}
+                </td>
+                <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                <td>
+                    <a href="{% url 'admin_edit_user' user.id %}" class="btn btn-outline-secondary btn-sm rounded-3"><i class="bi bi-gear"></i></a>
+                    <a href="{% url 'admin_delete_user' user.id %}" class="btn btn-outline-danger btn-sm rounded-3"><i class="bi bi-trash"></i></a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center text-muted">No users found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
