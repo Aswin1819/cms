@@ -1,0 +1,37 @@
+{% extends 'admin_base.html' %}
+{% block title %}Delete Post{% endblock %}
+{% block page_header %}
+<i class="bi bi-trash me-2"></i> Delete Post
+{% endblock %}
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'admin_posts' %}">Posts</a></li>
+<li class="breadcrumb-item active" aria-current="page">Delete</li>
+{% endblock %}
+{% block form_media %}{{ form.media }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <h5 class="mb-3">Are you sure you want to delete this post?</h5>
+                    <div class="mb-3">
+                        <strong>Title:</strong> {{ post.title }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Content:</strong>
+                        <div class="border rounded-3 p-2 bg-light" style="max-height:120px; overflow:auto;">
+                            {{ post.content|safe }}
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <a href="{% url 'admin_posts' %}" class="btn btn-secondary me-2">Cancel</a>
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

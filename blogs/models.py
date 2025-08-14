@@ -15,10 +15,10 @@ class BlogPost(models.Model):
         related_name='blog_posts'
     )
     title = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True, max_length=255)
+    # slug = models.SlugField(unique=True, max_length=255)
     content = RichTextField()  # CKEditor rich text field
     featured_image = CloudinaryField('featured_image', blank=True, null=True)
-    attachments = models.FileField(upload_to='attachments/', blank=True, null=True)
+    attachements = models.FileField(upload_to='attachements/', blank=True, null=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')
     likes = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='liked_posts', blank=True)
     dislikes = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='disliked_posts', blank=True)
@@ -26,12 +26,18 @@ class BlogPost(models.Model):
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_deleted = models.BooleanField(default=False)
+    featured = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-created_at']
 
     def __str__(self):
         return self.title
+    
+    def delete(self, using=None, keep_parents=False):
+        self.is_deleted = True
+        self.save()
 
 
 class Comment(models.Model):

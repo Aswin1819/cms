@@ -1,18 +1,53 @@
 {% extends 'admin_base.html' %}
+{% load static %}
 {% block title %}Posts Management{% endblock %}
 {% block page_header %}
-<i class="bi bi-file-earmark-text me-2"></i> Posts Management
+<i class="bi bi-file-earmark-post me-2"></i> Posts Management
 {% endblock %}
 {% block breadcrumb_items %}
 <li class="breadcrumb-item active" aria-current="page">Posts</li>
 {% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
+<div class="d-flex justify-content-end mb-3">
+    <a href="{% url 'admin_create_post' %}" class="btn btn-primary rounded-3">
+        <i class="bi bi-plus-circle me-1"></i> Create Post
+    </a>
+</div>
+<div class="row g-4">
+    {% for post in posts %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+            {% if post.featured_image %}
+            <img src="{{ post.featured_image.url }}" class="card-img-top rounded-top" style="max-height: 200px; object-fit: cover;" alt="Featured Image">
+            {% else %}
+            <img src="{% static 'img/noimage.jpg' %}" class="card-img-top rounded-top" style="max-height: 200px; object-fit: cover;" alt="No Image">
+            {% endif %}
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ post.title }}</h5>
+                <div class="mb-2 text-muted small">By {{ post.author.username }} | {{ post.created_at|date:"M d, Y" }}</div>
+                <div class="mb-2">
+                    <span class="badge bg-secondary">{{ post.status|title }}</span>
+                    {% if post.featured %}<span class="badge bg-warning text-dark">Featured</span>{% endif %}
+                </div>
+                <div class="mb-3 post-content-preview" style="max-height: 100px; overflow: auto;">
+                    {{ post.content|truncatechars_html:120|safe }}
+                </div>
+                <div class="mt-auto d-flex justify-content-between">
+                    <a href="{% url 'admin_edit_post' post.id %}" class="btn btn-outline-secondary btn-sm rounded-3"><i class="bi bi-pencil"></i> Edit</a>
+                    <a href="{% url 'admin_delete_post' post.id %}" class="btn btn-outline-danger btn-sm rounded-3"><i class="bi bi-trash"></i> Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center text-muted">No posts found.</div>
+    {% endfor %}
+</div>
+{% endblock %}
         <h4 class="fw-bold mb-1">Create, edit, and manage blog posts</h4>
         <span class="text-muted">Total Posts: <span class="badge bg-primary">{{ total_posts }}</span> | Featured: <span class="badge bg-info">{{ featured_posts }}</span></span>
     </div>
-    <a href="#" class="btn btn-primary rounded-3 px-4"><i class="bi bi-plus-lg me-2"></i> Create New Post</a>
+    <a href="{% url 'admin_create_post' %}" class="btn btn-primary rounded-3 px-4"><i class="bi bi-plus-lg me-2"></i> Create New Post</a>
 </div>
 <div class="table-responsive">
     <table class="table table-hover align-middle">
@@ -57,8 +92,8 @@
                     {% endif %}
                 </td>
                 <td>
-                    <a href="#" class="btn btn-outline-secondary btn-sm rounded-3"><i class="bi bi-pencil"></i></a>
-                    <a href="#" class="btn btn-outline-danger btn-sm rounded-3"><i class="bi bi-trash"></i></a>
+                    <a href="{% url 'admin_edit_post' post.id %}" class="btn btn-outline-secondary btn-sm rounded-3"><i class="bi bi-pencil"></i></a>
+                    <a href="{% url 'admin_delete_post' post.id %}" class="btn btn-outline-danger btn-sm rounded-3"><i class="bi bi-trash"></i></a>
                 </td>
             </tr>
             {% empty %}
@@ -70,4 +105,3 @@
     </table>
 </div>
 <!-- Pagination here if needed -->
-{% endblock %}
