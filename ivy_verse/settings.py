@@ -31,6 +31,10 @@ DEBUG = config('DEBUG',default=True,cast=bool)
 ALLOWED_HOSTS = ['*'] if DEBUG else config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
 
 
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -49,7 +53,7 @@ INSTALLED_APPS = [
     'cloudinary',
     'cloudinary_storage',
     'ckeditor',
-    'ckeditor_uploader'
+    'ckeditor_uploader',
 ]
 
 MIDDLEWARE = [
@@ -179,3 +183,15 @@ CLOUDINARY_STORAGE = {
     'API_KEY': config('API_KEY'),
     'API_SECRET': config('API_SECRET'),
 }
+
+print("CLOUD_NAME:", config('CLOUD_NAME'))
+print("API_KEY:", config('API_KEY'))
+print("API_SECRET:", config('API_SECRET'))
+
+# Configure Cloudinary
+cloudinary.config(
+    cloud_name=config('CLOUD_NAME'),
+    api_key=config('API_KEY'),
+    api_secret=config('API_SECRET'),
+    secure=True
+)

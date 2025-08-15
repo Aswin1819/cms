@@ -8,11 +8,17 @@ class CustomUser(AbstractUser):
     profile_image = CloudinaryField('profile_image', blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_verified = models.BooleanField(default=False)
+    is_deleted = models.BooleanField(default=False)
     
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
     
     def __str__(self):
         return self.email
+    
+    def delete(self, using=None, keep_parents=False):
+        self.is_deleted = True
+        self.save()
+
     
     
