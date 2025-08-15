@@ -13,7 +13,7 @@
     <div class="col-md-10 col-lg-8">
         <div class="card shadow-sm border-0 rounded-4">
             <div class="card-body">
-                <form method="post">
+                <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="mb-3">
                         {{ form.title.label_tag }}{{ form.title }}
@@ -23,6 +23,14 @@
                         {% if post.featured_image %}
                             <div class="mt-2">
                                 <img src="{{ post.featured_image.url }}" alt="Current Image" class="img-thumbnail" style="max-width: 200px;">
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.attachements.label_tag }}{{ form.attachements }}
+                        {% if post.attachements %}
+                            <div class="mt-2">
+                                <a href="{{ post.attachements.url }}" target="_blank">Current Attachment</a>
                             </div>
                         {% endif %}
                     </div>
