@@ -94,6 +94,16 @@ def admin_comments(request):
     }
     return render(request, 'admin_comments.html', context)
 
+
+@superuser_required
+def admin_approve_comment(request, id):
+    comment = get_object_or_404(Comment,id=id)
+    comment.is_approved = not comment.is_approved
+    comment.save()
+    return redirect('admin_comments')
+
+
+
 @superuser_required
 def admin_users(request):
     users = User.objects.filter(is_deleted=False)

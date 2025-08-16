@@ -22,7 +22,6 @@
             <option value="">All Status</option>
             <option value="approved">Approved</option>
             <option value="pending">Pending</option>
-            <option value="rejected">Rejected</option>
         </select>
         <button class="btn btn-outline-secondary">Filter</button>
     </form>
@@ -32,7 +31,7 @@
         <thead>
             <tr>
                 <th>Post</th>
-                <th>Author</th>
+                <th>Commented by</th>
                 <th>Comment</th>
                 <th>Status</th>
                 <th>Timestamp</th>
@@ -48,17 +47,17 @@
                 <td>
                     {% if comment.is_approved %}
                         <span class="badge bg-primary">Approved</span>
-                    {% elif comment.status == 'pending' %}
-                        <span class="badge bg-warning text-dark">Pending</span>
                     {% else %}
-                        <span class="badge bg-danger">Rejected</span>
+                        <span class="badge bg-warning text-dark">Pending</span>
                     {% endif %}
                 </td>
                 <td>{{ comment.created_at|timesince }} ago</td>
                 <td>
-                    <a href="{% url 'admin_approve_comment' comment.id %}" class="btn btn-outline-success btn-sm rounded-3">Approve</a>
-                    <a href="{% url 'admin_reject_comment' comment.id %}" class="btn btn-outline-warning btn-sm rounded-3">Reject</a>
-                    <a href="{% url 'admin_delete_comment' comment.id %}" class="btn btn-outline-danger btn-sm rounded-3">Delete</a>
+                    {% if not comment.is_approved %}
+                     <a href="{% url 'admin_approve_comment' comment.id %}" class="btn btn-outline-success btn-sm rounded-3">Approve</a>
+                    {% else %}
+                     <a href="{% url 'admin_approve_comment' comment.id %}" class="btn btn-outline-danger btn-sm rounded-3">Reject</a>
+                    {% endif %}
                 </td>
             </tr>
             {% empty %}

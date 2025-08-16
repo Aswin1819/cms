@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title }} - Blog{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Blog Post Title -->
+    <h1 class="fw-bold mb-2">{{ post.title }}</h1>
+    <!-- Author and Date -->
+    <div class="mb-4 text-muted">
+        <span class="me-3"><i class="bi bi-person"></i> {{ post.author.username }}</span>
+        <span><i class="bi bi-calendar"></i> {{ post.created_at|date:"M d, Y" }}</span>
+    </div>
+    <!-- Main Image -->
+    {% if post.image_url %}
+    <img src="{{ post.image_url }}" alt="{{ post.title }}" class="img-fluid rounded mb-4 w-100 shadow-sm">
+    {% endif %}
+    <!-- Blog Content -->
+    <div class="mb-5" style="font-size: 1.15rem; line-height: 1.8;">
+        {{ post.content|safe }}
+    </div>
+
+    <!-- Like and Unlike Buttons -->
+    <div class="d-flex align-items-center mb-3">
+        <button class="btn btn-outline-primary me-2" onclick="sendLike({{ post.id }})">
+            <i class="bi bi-heart"></i> Like (<span id="like-count-{{ post.id }}">{{ post.likes.count }}</span>)
+        </button>
+        <button class="btn btn-outline-danger" onclick="sendUnlike({{ post.id }})">
+            <i class="bi bi-hand-thumbs-down"></i> Unlike (<span id="dislike-count-{{ post.id }}">{{ post.dislikes.count }}</span>)
+        </button>
+    </div>
+
+    <!-- Comments Section -->
+    <h3 class="fw-semibold mb-3">Comments</h3>
+    <div class="mb-4">
+        {% for comment in comments %}
+        <div class="border rounded-3 p-3 mb-3 bg-light">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="fw-bold">{{ comment.author.username }}</span>
+                <span class="text-muted small">{{ comment.created_at|date:"M d, Y H:i" }}</span>
+            </div>
+            <div>{{ comment.content|linebreaks }}</div>
+        </div>
+        {% empty %}
+        <p class="text-muted">No comments yet. Be the first to comment!</p>
+        {% endfor %}
+    </div>
+
+    <!-- Add Comment Form -->
+    <div class="card shadow-sm mb-5">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Add a Comment</h5>
+            <form method="post" action="{% url 'comment-create' post.id %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <textarea name="content" class="form-control" rows="3" placeholder="Write your comment here..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary px-4">Submit</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block extra_css %}
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<script>
+function sendLike(postId) {
+    fetch("{% url 'like-post' 0 %}".replace('0', postId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('like-count-' + postId).innerText = data.likes_count;
+        document.getElementById('dislike-count-' + postId).innerText = data.dislikes_count;
+    });
+}
+
+function sendUnlike(postId) {
+    fetch("{% url 'unlike-post' 0 %}".replace('0', postId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('like-count-' + postId).innerText = data.likes_count;
+        document.getElementById('dislike-count-' + postId).innerText = data.dislikes_count;
+    });
+}
+</script>
+{% endblock %}

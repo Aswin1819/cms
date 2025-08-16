@@ -184,9 +184,7 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': config('API_SECRET'),
 }
 
-print("CLOUD_NAME:", config('CLOUD_NAME'))
-print("API_KEY:", config('API_KEY'))
-print("API_SECRET:", config('API_SECRET'))
+
 
 # Configure Cloudinary
 cloudinary.config(
