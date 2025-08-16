@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import CustomUser
+import re
 
 
 class SignUpForm(UserCreationForm):
@@ -39,6 +40,12 @@ class SignUpForm(UserCreationForm):
         # Remove help text
         for field_name in ['username', 'password1', 'password2']:
             self.fields[field_name].help_text = None
+            
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if not re.match(r'^[a-zA-Z]+$', username):
+            raise forms.ValidationError("Username can only contain letters.")
+        return username
     
     def save(self, commit=True):
         user = super().save(commit=False)
