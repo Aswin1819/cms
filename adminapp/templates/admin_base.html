@@ -99,17 +99,9 @@
         <div class="header">
             <div>
                 <span class="page-title">{% block page_header %}{% endblock %}</span>
-                {% block breadcrumb %}
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{% url 'admin_posts' %}">Dashboard</a></li>
-                        {% block breadcrumb_items %}{% endblock %}
-                    </ol>
-                </nav>
-                {% endblock %}
             </div>
             <div class="d-flex align-items-center">
-                <img src="#" alt="Admin" class="rounded-circle me-2" width="40" height="40">
+                {% comment %} <img src="#" alt="Admin" class="rounded-circle me-2" width="40" height="40"> {% endcomment %}
                 <span class="fw-semibold">{{ request.user.username }}</span>
             </div>
         </div>

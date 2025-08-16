@@ -1,71 +1,127 @@
 {% extends 'admin_base.html' %}
 {% block title %}Comments Management{% endblock %}
+
 {% block page_header %}
 <i class="bi bi-chat-dots me-2"></i> Comments Management
 {% endblock %}
-{% block breadcrumb_items %}
-<li class="breadcrumb-item active" aria-current="page">Comments</li>
+
+{% block extra_css %}
+<style>
+  /* Improve readability for long comments */
+  .comment-text { white-space: pre-wrap; }
+  .clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* show 3 lines by default */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .filters .form-control, .filters .form-select { min-width: 220px; }
+  .stat-badge { font-size: .85rem; }
+</style>
 {% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h4 class="fw-bold mb-1">Review and moderate user comments</h4>
-        <span class="text-muted">
-            Total: <span class="badge bg-primary">{{ total_comments }}</span>
-            Approved: <span class="badge bg-info">{{ approved_comments }}</span>
-            Pending: <span class="badge bg-danger">{{ pending_comments }}</span>
-        </span>
-    </div>
-    <form class="d-flex" method="get">
-        <input type="text" name="search" class="form-control me-2" placeholder="Search by author or content">
-        <select name="status" class="form-select me-2">
-            <option value="">All Status</option>
-            <option value="approved">Approved</option>
-            <option value="pending">Pending</option>
-        </select>
-        <button class="btn btn-outline-secondary">Filter</button>
-    </form>
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+  <div>
+    <h4 class="fw-bold mb-1">Review and moderate user comments</h4>
+    <span class="text-muted d-flex gap-2 flex-wrap">
+      <span>Totals:</span>
+      <span class="badge bg-primary stat-badge">Total {{ total_comments }}</span>
+      <span class="badge bg-info stat-badge">Approved {{ approved_comments }}</span>
+      <span class="badge bg-danger stat-badge">Pending {{ pending_comments }}</span>
+    </span>
+  </div>
 </div>
-<div class="table-responsive">
-    <table class="table table-hover align-middle">
-        <thead>
-            <tr>
-                <th>Post</th>
-                <th>Commented by</th>
-                <th>Comment</th>
-                <th>Status</th>
-                <th>Timestamp</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for comment in comments %}
-            <tr>
-                <td>{{ comment.post.title|truncatechars:30 }}</td>
-                <td>{{ comment.user.username }}</td>
-                <td>{{ comment.content|truncatechars:40 }}</td>
-                <td>
-                    {% if comment.is_approved %}
-                        <span class="badge bg-primary">Approved</span>
-                    {% else %}
-                        <span class="badge bg-warning text-dark">Pending</span>
-                    {% endif %}
-                </td>
-                <td>{{ comment.created_at|timesince }} ago</td>
-                <td>
-                    {% if not comment.is_approved %}
-                     <a href="{% url 'admin_approve_comment' comment.id %}" class="btn btn-outline-success btn-sm rounded-3">Approve</a>
-                    {% else %}
-                     <a href="{% url 'admin_approve_comment' comment.id %}" class="btn btn-outline-danger btn-sm rounded-3">Reject</a>
-                    {% endif %}
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="6" class="text-center text-muted">No comments found.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+
+<div class="vstack gap-3">
+  {% for comment in comments %}
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-start">
+        <div class="me-3">
+          <h5 class="card-title mb-1">{{ comment.post.title|truncatechars:60 }}</h5>
+          <div class="text-muted small">
+            <i class="bi bi-person me-1"></i>{{ comment.user.username }}
+            <span class="mx-2">•</span>
+            <i class="bi bi-clock me-1"></i>{{ comment.created_at|timesince }} ago
+          </div>
+        </div>
+        <div class="text-nowrap">
+          {% if comment.is_approved %}
+            <span class="badge bg-primary">Approved</span>
+          {% else %}
+            <span class="badge bg-warning text-dark">Pending</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <p id="comment-body-{{ comment.id }}" class="card-text mt-3 mb-2 comment-text clamp-3">{{ comment.content }}</p>
+
+      <div class="d-flex align-items-center gap-3">
+        {% if not comment.is_approved %}
+          <a href="{% url 'admin_approve_comment' comment.id %}" class="btn btn-outline-success btn-sm rounded-3">Approve</a>
+        {% else %}
+          <a href="{% url 'admin_approve_comment' comment.id %}" class="btn btn-outline-danger btn-sm rounded-3">Reject</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="text-center text-muted py-5 border rounded-3 bg-light">No comments found.</div>
+  {% endfor %}
+</div>
+
+<div class="d-flex justify-content-between align-items-center mt-3">
+  <div class="text-muted small">
+    {% if total_comments %}
+      Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ total_comments }}
+    {% endif %}
+  </div>
+  {% if is_paginated %}
+  <nav aria-label="Comments pagination">
+    <ul class="pagination mb-0">
+      <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+        {% if page_obj.has_previous %}
+          <a class="page-link" href="?{% if querystring %}{{ querystring }}&{% endif %}page=1">First</a>
+        {% else %}
+          <span class="page-link">First</span>
+        {% endif %}
+      </li>
+      <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+        {% if page_obj.has_previous %}
+          <a class="page-link" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Prev</a>
+        {% else %}
+          <span class="page-link">Prev</span>
+        {% endif %}
+      </li>
+      {% for num in paginator.page_range %}
+        {% if num >= page_obj.number|add:'-2' and num <= page_obj.number|add:'2' %}
+          <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+            {% if page_obj.number == num %}
+              <span class="page-link">{{ num }}</span>
+            {% else %}
+              <a class="page-link" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}">{{ num }}</a>
+            {% endif %}
+          </li>
+        {% endif %}
+      {% endfor %}
+      <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+        {% if page_obj.has_next %}
+          <a class="page-link" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+        {% else %}
+          <span class="page-link">Next</span>
+        {% endif %}
+      </li>
+      <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+        {% if page_obj.has_next %}
+          <a class="page-link" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ paginator.num_pages }}">Last</a>
+        {% else %}
+          <span class="page-link">Last</span>
+        {% endif %}
+      </li>
+    </ul>
+  </nav>
+  {% endif %}
 </div>
 {% endblock %}
+

@@ -22,7 +22,7 @@ class BlogPost(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')
     likes = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='liked_posts', blank=True)
     dislikes = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='disliked_posts', blank=True)
-    read_count = models.PositiveIntegerField(default=0)
+    # read_count = models.PositiveIntegerField(default=0)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -38,6 +38,10 @@ class BlogPost(models.Model):
     def delete(self, using=None, keep_parents=False):
         self.is_deleted = True
         self.save()
+        
+    @property
+    def read_count(self):
+        return ReadLog.objects.filter(post=self).count()
 
 
 class Comment(models.Model):

@@ -5,22 +5,43 @@ from core.decorators import superuser_required
 from django.utils import timezone
 from .forms import PostForm
 from django.contrib import messages
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 User = get_user_model()
 
-# @superuser_required
-# def admin_home(request):
-#     return render(request, 'admin_home.html')
+
 
 @superuser_required
 def admin_posts(request):
-    posts = BlogPost.objects.all().order_by('-created_at')
-    total_posts = posts.count()
-    featured_posts = posts.filter(status='published', featured=True).count() if hasattr(BlogPost, 'featured') else 0
+    # Get all posts ordered by creation date
+    posts_list = BlogPost.objects.all().order_by('-created_at')
+    
+    # Calculate statistics
+    total_posts = posts_list.count()
+    featured_posts = posts_list.filter(featured=True).count() if hasattr(BlogPost, 'featured') else 0
+    published_posts = posts_list.filter(status='published').count()
+    draft_posts = posts_list.filter(status='draft').count()
+    
+    # Pagination
+    posts_per_page = 10  
+    paginator = Paginator(posts_list, posts_per_page)
+    
+    page = request.GET.get('page')
+    try:
+        posts = paginator.page(page)
+    except PageNotAnInteger:
+        posts = paginator.page(1)
+    except EmptyPage:
+        posts = paginator.page(paginator.num_pages)
+    
     context = {
         'posts': posts,
         'total_posts': total_posts,
         'featured_posts': featured_posts,
+        'published_posts': published_posts,
+        'draft_posts': draft_posts,
+        'paginator': paginator,
+        'page_obj': posts,
     }
     return render(request, 'admin_posts.html', context)
 
@@ -82,15 +103,38 @@ def admin_delete_post(request, id):
 
 @superuser_required
 def admin_comments(request):
-    comments = Comment.objects.all()
-    total_comments = comments.count()
-    approved_comments = comments.filter(is_approved=True).count()
-    pending_comments = comments.filter(is_approved=False).count()
+    
+    comments_qs = Comment.objects.select_related('user', 'post').all()
+
+    
+    total_comments = comments_qs.count()
+    approved_comments = comments_qs.filter(is_approved=True).count()
+    pending_comments = comments_qs.filter(is_approved=False).count()
+
+    # Pagination
+    paginator = Paginator(comments_qs, 10)
+    page = request.GET.get('page')
+    try:
+        comments = paginator.page(page)
+    except PageNotAnInteger:
+        comments = paginator.page(1)
+    except EmptyPage:
+        comments = paginator.page(paginator.num_pages)
+
+    qparams = request.GET.copy()
+    if 'page' in qparams:
+        del qparams['page']
+    querystring = qparams.urlencode()
+
     context = {
         'comments': comments,
         'total_comments': total_comments,
         'approved_comments': approved_comments,
         'pending_comments': pending_comments,
+        'paginator': paginator,
+        'page_obj': comments,
+        'is_paginated': comments.has_other_pages(),
+        'querystring': querystring,
     }
     return render(request, 'admin_comments.html', context)
 
@@ -106,17 +150,41 @@ def admin_approve_comment(request, id):
 
 @superuser_required
 def admin_users(request):
-    users = User.objects.filter(is_deleted=False)
-    total_users = users.count()
-    active_users = users.filter(is_active=True).count()
-    admin_users = users.filter(is_superuser=True).count()
-    recent_signups = users.filter(date_joined__gte=timezone.now()-timezone.timedelta(days=7)).count()
+    # Base queryset
+    users_qs = User.objects.filter(is_deleted=False).order_by('-date_joined')
+
+    # Stats (independent of pagination)
+    total_users = users_qs.count()
+    active_users = users_qs.filter(is_active=True).count()
+    admin_users = users_qs.filter(is_superuser=True).count()
+    recent_signups = users_qs.filter(date_joined__gte=timezone.now()-timezone.timedelta(days=7)).count()
+
+    # Pagination
+    paginator = Paginator(users_qs, 10)
+    page = request.GET.get('page')
+    try:
+        users = paginator.page(page)
+    except PageNotAnInteger:
+        users = paginator.page(1)
+    except EmptyPage:
+        users = paginator.page(paginator.num_pages)
+
+    # Preserve other query params when paginating
+    qparams = request.GET.copy()
+    if 'page' in qparams:
+        del qparams['page']
+    querystring = qparams.urlencode()
+
     context = {
         'users': users,
         'total_users': total_users,
         'active_users': active_users,
         'admin_users': admin_users,
         'recent_signups': recent_signups,
+        'paginator': paginator,
+        'page_obj': users,
+        'is_paginated': users.has_other_pages(),
+        'querystring': querystring,
     }
     return render(request, 'admin_user.html', context)
 

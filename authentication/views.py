@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from .utils import set_jwt_cookies
 import logging
-
+from core.decorators import jwt_required
 logger = logging.getLogger(__name__)
 
 
@@ -51,4 +51,10 @@ def login_view(request):
     return render(request, 'login.html', {'form':form})
 
                 
-            
+
+@jwt_required
+def user_logout_view(request):
+    response = redirect("login")
+    response.delete_cookie("access_token")
+    response.delete_cookie("refresh_token")
+    return response

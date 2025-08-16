@@ -1,70 +1,499 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
 {% block title %}{{ post.title }} - Blog{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <!-- Blog Post Title -->
-    <h1 class="fw-bold mb-2">{{ post.title }}</h1>
-    <!-- Author and Date -->
-    <div class="mb-4 text-muted">
-        <span class="me-3"><i class="bi bi-person"></i> {{ post.author.username }}</span>
-        <span><i class="bi bi-calendar"></i> {{ post.created_at|date:"M d, Y" }}</span>
-    </div>
-    <!-- Main Image -->
-    {% if post.image_url %}
-    <img src="{{ post.image_url }}" alt="{{ post.title }}" class="img-fluid rounded mb-4 w-100 shadow-sm">
-    {% endif %}
-    <!-- Blog Content -->
-    <div class="mb-5" style="font-size: 1.15rem; line-height: 1.8;">
-        {{ post.content|safe }}
-    </div>
-
-    <!-- Like and Unlike Buttons -->
-    <div class="d-flex align-items-center mb-3">
-        <button class="btn btn-outline-primary me-2" onclick="sendLike({{ post.id }})">
-            <i class="bi bi-heart"></i> Like (<span id="like-count-{{ post.id }}">{{ post.likes.count }}</span>)
-        </button>
-        <button class="btn btn-outline-danger" onclick="sendUnlike({{ post.id }})">
-            <i class="bi bi-hand-thumbs-down"></i> Unlike (<span id="dislike-count-{{ post.id }}">{{ post.dislikes.count }}</span>)
-        </button>
-    </div>
-
-    <!-- Comments Section -->
-    <h3 class="fw-semibold mb-3">Comments</h3>
-    <div class="mb-4">
-        {% for comment in comments %}
-        <div class="border rounded-3 p-3 mb-3 bg-light">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="fw-bold">{{ comment.author.username }}</span>
-                <span class="text-muted small">{{ comment.created_at|date:"M d, Y H:i" }}</span>
-            </div>
-            <div>{{ comment.content|linebreaks }}</div>
-        </div>
-        {% empty %}
-        <p class="text-muted">No comments yet. Be the first to comment!</p>
-        {% endfor %}
-    </div>
-
-    <!-- Add Comment Form -->
-    <div class="card shadow-sm mb-5">
-        <div class="card-body">
-            <h5 class="card-title mb-3">Add a Comment</h5>
-            <form method="post" action="{% url 'comment-create' post.id %}">
-                {% csrf_token %}
-                <div class="mb-3">
-                    <textarea name="content" class="form-control" rows="3" placeholder="Write your comment here..." required></textarea>
+<!-- Full Width Professional Navbar -->
+<nav class="navbar-custom w-100 mb-4" 
+     style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000;">
+    <div class="container-fluid px-4 py-3 w-100" 
+    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000;">
+        <div class="d-flex justify-content-between align-items-center w-100">
+            <div class="d-flex align-items-center">
+                <div class="me-4">
+                    <h2 class="fw-bold mb-1" style="color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">JobBlog</h2>
+                    <p class="mb-0 small" style="color: rgba(255, 255, 255, 0.8); text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Professional insights and career guidance</p>
                 </div>
-                <button type="submit" class="btn btn-primary px-4">Submit</button>
-            </form>
+                <span class="badge fw-semibold px-3 py-2 rounded-pill" 
+                      style="background-color: rgba(255, 255, 255, 0.2); color: white; backdrop-filter: blur(10px);">Reader</span>
+            </div>
+            <a href="/api/admin/logout/" class="text-decoration-none d-flex align-items-center hover-effect-nav" 
+               style="color: white;">
+                <i class="bi bi-box-arrow-right fs-3 me-2"></i> 
+                <span class="fw-medium">Logout</span>
+            </a>
+        </div>
+    </div>
+</nav>
+
+<!-- Professional Blog Article Layout -->
+<div class="container" style="max-width: 900px;">
+    <div class="row">
+        <div class="col-12">
+            <!-- Back to Home Button -->
+            <div class="mb-4">
+                <a href="/api/blogs/user_home/" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Articles
+                </a>
+            </div>
+            
+            <!-- Article Header -->
+            <article class="blog-article">
+                <header class="article-header mb-4">
+                    <h1 class="article-title fw-bold mb-3" style="font-size: 2.5rem; line-height: 1.2; color: #212529;">
+                        {{ post.title }}
+                    </h1>
+                    
+                    <!-- Article Meta -->
+                    <div class="article-meta d-flex flex-wrap align-items-center mb-4 pb-3 border-bottom">
+                        <div class="author-info d-flex align-items-center me-4 mb-2">
+                            <div class="author-avatar me-2">
+                                <i class="bi bi-person-circle fs-4 text-primary"></i>
+                            </div>
+                            <div>
+                                <span class="fw-semibold text-dark">{{ post.author.username }}</span>
+                                <div class="text-muted small">Author</div>
+                            </div>
+                        </div>
+                        
+                        <div class="article-date me-4 mb-2">
+                            <i class="bi bi-calendar-event me-1 text-muted"></i>
+                            <span class="text-muted">{{ post.created_at|date:"F d, Y" }}</span>
+                        </div>
+                        
+                        <div class="read-time me-4 mb-2">
+                            <i class="bi bi-clock me-1 text-muted"></i>
+                            <span class="text-muted">5 min read</span>
+                        </div>
+                        
+                        <div class="article-engagement mb-2">
+                            <i class="bi bi-eye me-1 text-muted"></i>
+                            <span class="text-muted">{{ post.read_count }} views</span>
+                        </div>
+                    </div>
+                </header>
+                
+                <!-- Featured Image -->
+                {% if post.featured_image %}
+                <div class="featured-image-container mb-5">
+                    <img src="{{ post.featured_image.url }}" 
+                         alt="{{ post.title }}" 
+                         class="img-fluid rounded-3 shadow-sm w-100"
+                         style="height: 400px; object-fit: cover; object-position: center;">
+                    <div class="image-caption text-muted small text-center mt-2 fst-italic">
+                        Featured image for "{{ post.title }}"
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Article Content -->
+                <div class="article-content mb-5" style="font-size: 1.1rem; line-height: 1.8; color: #374151;">
+                    {{ post.content|safe }}
+                </div>
+
+                <!-- Article Engagement -->
+                <div class="article-engagement-section mb-5">
+                    <div class="engagement-actions d-flex align-items-center justify-content-between p-4 bg-light rounded-3 border">
+                        <div class="engagement-buttons d-flex align-items-center">
+                            <button class="btn btn-outline-primary me-3 engagement-btn" onclick="sendLike({{ post.id }})">
+                                <i class="bi bi-heart me-1"></i> 
+                                <span>Like</span>
+                                <span class="badge bg-primary ms-2" id="like-count-{{ post.id }}">{{ post.likes.count }}</span>
+                            </button>
+                            <button class="btn btn-outline-secondary engagement-btn" onclick="sendUnlike({{ post.id }})">
+                                <i class="bi bi-hand-thumbs-down me-1"></i> 
+                                <span>Dislike</span>
+                                <span class="badge bg-secondary ms-2" id="dislike-count-{{ post.id }}">{{ post.dislikes.count }}</span>
+                            </button>
+                        </div>
+                        
+                        <div class="share-actions">
+                            <span class="text-muted small me-3">Share this article</span>
+                            <button class="btn btn-link p-1 me-1" title="Share on Twitter">
+                                <i class="bi bi-twitter text-info"></i>
+                            </button>
+                            <button class="btn btn-link p-1 me-1" title="Share on LinkedIn">
+                                <i class="bi bi-linkedin text-primary"></i>
+                            </button>
+                            <button class="btn btn-link p-1" title="Copy Link">
+                                <i class="bi bi-link-45deg text-secondary"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </article>
+            
+            <!-- Comments Section -->
+            <section class="comments-section">
+                <div class="comments-header d-flex align-items-center justify-content-between mb-4">
+                    <h3 class="fw-semibold mb-0">
+                        <i class="bi bi-chat-dots me-2 text-primary"></i>
+                        Discussion ({{ comments.count }})
+                    </h3>
+                </div>
+                
+                <!-- Add Comment Form -->
+                <div class="add-comment-form mb-5">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">
+                                <i class="bi bi-pencil-square me-2 text-primary"></i>
+                                Join the Discussion
+                            </h5>
+                            <form method="post" action="{% url 'comment-create' post.id %}">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <textarea name="content" 
+                                              class="form-control" 
+                                              rows="4" 
+                                              placeholder="Share your thoughts about this article..." 
+                                              required
+                                              style="resize: vertical; min-height: 100px;"></textarea>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Your comment will be reviewed before publishing
+                                    </small>
+                                    <button type="submit" class="btn btn-primary px-4">
+                                        <i class="bi bi-send me-1"></i>
+                                        Post Comment
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Comments List -->
+                <div class="comments-list">
+                    {% for comment in comments %}
+                    <div class="comment-item mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="comment-header d-flex align-items-center justify-content-between mb-3">
+                                    <div class="commenter-info d-flex align-items-center">
+                                        <div class="commenter-avatar me-3">
+                                            <i class="bi bi-person-circle fs-4 text-secondary"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-semibold mb-0">{{ comment.user.username }}</h6>
+                                            <small class="text-muted">
+                                                <i class="bi bi-clock me-1"></i>
+                                                {{ comment.created_at|date:"F d, Y \a\t g:i A" }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="comment-content" style="line-height: 1.6;">
+                                    {{ comment.content|linebreaks }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="no-comments text-center py-5">
+                        <i class="bi bi-chat-dots fs-1 text-muted mb-3"></i>
+                        <h5 class="text-muted mb-2">No comments yet</h5>
+                        <p class="text-muted">Be the first to share your thoughts about this article!</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
         </div>
     </div>
 </div>
 
 {% endblock %}
 {% block extra_css %}
-<!-- Bootstrap Icons -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<style>
+/* Professional Blog Article Styling */
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Navbar Styling */
+.navbar-custom {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.hover-effect-nav:hover {
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+    transform: translateY(-1px);
+}
+
+.hover-effect-nav:hover .bi-box-arrow-right {
+    transform: translateX(3px);
+    transition: transform 0.2s ease;
+}
+
+/* Article Styling */
+.blog-article {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    margin-bottom: 2rem;
+}
+
+.article-title {
+    font-weight: 700;
+    color: #1a202c;
+    margin-bottom: 1.5rem;
+}
+
+.article-meta {
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 1rem;
+}
+
+.author-info {
+    background: #f7fafc;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+}
+
+.featured-image-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.featured-image-container img {
+    transition: transform 0.3s ease;
+}
+
+.featured-image-container:hover img {
+    transform: scale(1.02);
+}
+
+.image-caption {
+    margin-top: 0.5rem;
+    font-style: italic;
+    color: #6b7280;
+}
+
+.article-content {
+    font-family: Georgia, 'Times New Roman', serif;
+    color: #374151;
+    line-height: 1.8;
+}
+
+.article-content h1, .article-content h2, .article-content h3 {
+    color: #1a202c;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.article-content p {
+    margin-bottom: 1.5rem;
+}
+
+.article-content blockquote {
+    border-left: 4px solid #667eea;
+    padding-left: 1.5rem;
+    margin: 2rem 0;
+    font-style: italic;
+    color: #4a5568;
+    background: #f7fafc;
+    padding: 1rem 1.5rem;
+    border-radius: 0 8px 8px 0;
+}
+
+/* Engagement Section */
+.article-engagement-section {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+.engagement-actions {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.engagement-btn {
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.engagement-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.share-actions .btn-link {
+    transition: all 0.2s ease;
+}
+
+.share-actions .btn-link:hover {
+    transform: scale(1.2);
+}
+
+/* Comments Section */
+.comments-section {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.add-comment-form .card {
+    border: 2px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.add-comment-form .card:hover {
+    border-color: #667eea;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+}
+
+.comment-item .card {
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.comment-item .card:hover {
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.commenter-avatar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.commenter-avatar i {
+    color: white;
+}
+
+.comment-content {
+    color: #4a5568;
+}
+
+.no-comments {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 12px;
+    border: 2px dashed #cbd5e0;
+}
+
+/* Form Styling */
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.15);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-outline-primary {
+    border: 2px solid #667eea;
+    color: #667eea;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+    background: #667eea;
+    border-color: #667eea;
+    transform: translateY(-1px);
+}
+
+.btn-outline-secondary {
+    border: 2px solid #6b7280;
+    color: #6b7280;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-secondary:hover {
+    background: #6b7280;
+    border-color: #6b7280;
+    transform: translateY(-1px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .blog-article {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+    
+    .article-title {
+        font-size: 2rem;
+    }
+    
+    .article-meta {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .article-meta > div {
+        margin-bottom: 0.5rem;
+    }
+    
+    .engagement-actions {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .share-actions {
+        text-align: center;
+    }
+    
+    .comments-section {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+}
+
+/* Animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.blog-article, .comments-section {
+    animation: fadeInUp 0.6s ease-out;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
 <script>
 function sendLike(postId) {
     fetch("{% url 'like-post' 0 %}".replace('0', postId), {
