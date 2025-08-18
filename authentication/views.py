@@ -5,10 +5,13 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .utils import set_jwt_cookies
 import logging
 from core.decorators import jwt_required
+from django.views.decorators.cache import never_cache
 logger = logging.getLogger(__name__)
 
-
+@never_cache
 def signup_view(request):
+    if request.user.is_authenticated:
+        return redirect('user_home')
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
@@ -22,9 +25,10 @@ def signup_view(request):
     return render(request, 'signup.html', {'form':form})
 
 
-
+@never_cache
 def login_view(request):
-    
+    if request.user.is_authenticated:
+        return redirect('user_home')
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
