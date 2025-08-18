@@ -106,3 +106,47 @@ def unlike_post(request, id):
     post.dislikes.add(request.user)
     post.likes.remove(request.user)
     return JsonResponse({'likes_count': post.likes.count(), 'dislikes_count': post.dislikes.count()})
+
+
+@jwt_required
+def edit_comment(request, id):
+    """Allow the owner of a comment to edit its content. Re-approve after edit."""
+    comment = get_object_or_404(Comment, id=id)
+
+    
+    if comment.user_id != request.user.id:
+        messages.error(request, "You are not allowed to edit this comment.")
+        return redirect('post_detail', id=comment.post_id)
+
+    if request.method != 'POST':
+        return redirect('post_detail', id=comment.post_id)
+
+    content = request.POST.get('content', '').strip()
+    if not content:
+        messages.error(request, "Comment cannot be empty.")
+        return redirect('post_detail', id=comment.post_id)
+
+    comment.content = content
+    # comment.is_approved = False
+    comment.save()
+
+    messages.success(request, "Comment updated. Awaiting approval.")
+    return redirect('post_detail', id=comment.post_id)
+
+
+@jwt_required
+def delete_comment(request, id):
+    """Allow the owner of a comment to delete it."""
+    comment = get_object_or_404(Comment, id=id)
+
+    if comment.user_id != request.user.id:
+        messages.error(request, "You are not allowed to delete this comment.")
+        return redirect('post_detail', id=comment.post_id)
+
+    if request.method != 'POST':
+        return redirect('post_detail', id=comment.post_id)
+
+    post_id = comment.post_id
+    comment.delete()
+    messages.success(request, "Comment deleted.")
+    return redirect('post_detail', id=post_id)

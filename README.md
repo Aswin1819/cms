@@ -146,7 +146,7 @@ All admin endpoints require a superuser (checked via decorators and middleware).
 - Run dev server: `python manage.py runserver`
 
 ## License
-Add your preferred license (e.g., MIT).
+license 
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.

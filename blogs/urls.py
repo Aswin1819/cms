@@ -9,5 +9,6 @@ urlpatterns = [
     path('comment-create/<int:id>/', create_comment, name='comment-create'),
     path('like/<int:id>/', like_post, name='like-post'),
     path('unlike/<int:id>/', unlike_post, name='unlike-post'),
-    
+    path('comment-edit/<int:id>/', edit_comment, name='comment-edit'),
+    path('comment-delete/<int:id>/', delete_comment, name='comment-delete'),
 ]
